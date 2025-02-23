@@ -3,21 +3,22 @@ local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local Players = game:GetService("Players")
 
 local HWID = RbxAnalyticsService:GetClientId()
-local whitelistURL = "https://alabaster-scientific-paint.glitch.me/whitelist"  -- Replace with your actual Glitch API URL
+local whitelistURL = "https://raw.githubusercontent.com/tencell200/eqweqwe/main/ok.txt"  -- ✅ Updated to GitHub
 
 local success, response = pcall(function()
     return HttpService:GetAsync(whitelistURL)
 end)
 
 if success then
-    local data = HttpService:JSONDecode(response)
-    if not table.find(data, HWID) then
+    if response:find(HWID) then
+        print("✅ HWID Verified - Access Granted!")
+    else
         print("❌ HWID Not Whitelisted - Access Denied!")
         Players.LocalPlayer:Kick("Your HWID is not whitelisted. Contact support.")
         return
     end
 else
-    print("⚠ Failed to fetch whitelist data")
+    print("⚠ Failed to fetch whitelist data from GitHub")
     Players.LocalPlayer:Kick("Whitelist verification failed. Try again later.")
     return
 end
@@ -167,4 +168,3 @@ local Slider = Tab:CreateSlider({
        teleportDistance = Value
    end,
 })
-76759c94-aee0-11ef-89d5-806e6f6e6963

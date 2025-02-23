@@ -1,0 +1,169 @@
+local HttpService = game:GetService("HttpService")
+local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
+local Players = game:GetService("Players")
+
+local HWID = RbxAnalyticsService:GetClientId()
+local whitelistURL = "https://alabaster-scientific-paint.glitch.me/whitelist"  -- Replace with your actual Glitch API URL
+
+local success, response = pcall(function()
+    return HttpService:GetAsync(whitelistURL)
+end)
+
+if success then
+    local data = HttpService:JSONDecode(response)
+    if not table.find(data, HWID) then
+        print("❌ HWID Not Whitelisted - Access Denied!")
+        Players.LocalPlayer:Kick("Your HWID is not whitelisted. Contact support.")
+        return
+    end
+else
+    print("⚠ Failed to fetch whitelist data")
+    Players.LocalPlayer:Kick("Whitelist verification failed. Try again later.")
+    return
+end
+
+print("✅ HWID Verified - Access Granted!")
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+if not Rayfield then
+    warn("rayfield failed to load")
+    return
+end
+
+local Window = Rayfield:CreateWindow({
+    Name = "Tens STFO Script",
+    LoadingTitle = "Thanks for buying ig",
+    LoadingSubtitle = "by tencell2. on discord",
+    Theme = "Default",
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Big Hub"
+    },
+    KeySystem = false,
+})
+
+local Tab = Window:CreateTab("main", 4483362458)
+
+local reachConnection
+local autosnipeConnection
+local teleportDistance = 10
+local teleportWalkSpeed = 10 -- Default walk speed for teleportation
+local targetPlayer = nil
+
+local function isPlayerAlive(player)
+    return player and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
+end
+
+local function resetAutosnipe()
+    if autosnipeConnection then
+        autosnipeConnection:Disconnect()
+        autosnipeConnection = nil
+        targetPlayer = nil
+    end
+end
+
+local Toggle = Tab:CreateToggle({
+   Name = "Reach",
+   CurrentValue = false,
+   Flag = "Toggle1",
+   Callback = function(Value)
+       local plr = game.Players.LocalPlayer
+       local char = plr.Character or plr.CharacterAdded:Wait()
+       local tool = char:FindFirstChildOfClass("Tool")
+
+       if tool then
+           local handle = tool:FindFirstChild("Handle")
+
+           if handle then
+               if Value then
+                   handle.Size = Vector3.new(10, 10, 10)
+                   handle.Massless = true
+                   handle.CanCollide = false
+
+                   local function onTouched(hit)
+                       if hit and hit.Parent then
+                           local enemy = hit.Parent:FindFirstChild("Humanoid")
+                           if enemy then
+                               print("Hit:", enemy.Parent.Name)
+                           end
+                       end
+                   end
+                   reachConnection = handle.Touched:Connect(onTouched)
+               else
+                   handle.Size = Vector3.new(1, 1, 1)
+                   if reachConnection then
+                       reachConnection:Disconnect()
+                       reachConnection = nil
+                   end
+               end
+           end
+       end
+   end,
+})
+
+local tpWalkConnection  -- Store the connection so we can disconnect it later
+
+local Toggle = Tab:CreateToggle({
+   Name = "Tp walk",
+   CurrentValue = false,
+   Flag = "Toggle2",
+   Callback = function(Value)
+       local player = game.Players.LocalPlayer
+       local character = player.Character or player.CharacterAdded:Wait()
+       local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+       local humanoid = character:FindFirstChildOfClass("Humanoid")
+       local runService = game:GetService("RunService")
+
+       local normalSpeed = 16
+       local targetSpeed = 25  -- Target speed for teleport walk
+       local maxSpeed = 50
+       local speedMultiplier = math.min(targetSpeed, maxSpeed) / normalSpeed  -- Calculate speed multiplier
+       local randomness = 0.03
+
+       if Value then
+           -- Ensure we don't have multiple connections running
+           if tpWalkConnection then tpWalkConnection:Disconnect() end 
+
+           tpWalkConnection = runService.Heartbeat:Connect(function(deltaTime)
+               if humanoid and humanoidRootPart and humanoid.MoveDirection.Magnitude > 0 then
+                   local moveDirection = humanoid.MoveDirection.Unit
+                   local extraDistance = (speedMultiplier - 1) * (normalSpeed * deltaTime)
+                   local maxMove = maxSpeed * deltaTime
+                   extraDistance = math.min(extraDistance, maxMove)
+                   local randomOffset = Vector3.new(math.random() * randomness, 0, math.random() * randomness)
+                   humanoidRootPart.CFrame = humanoidRootPart.CFrame + (moveDirection * extraDistance) + randomOffset
+               end
+           end)
+       else
+           if tpWalkConnection then 
+               tpWalkConnection:Disconnect()
+               tpWalkConnection = nil
+           end
+       end
+   end,
+})
+
+-- Auto disable when player respawns
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    if tpWalkConnection then
+        tpWalkConnection:Disconnect()
+        tpWalkConnection = nil
+    end
+end)
+
+-- Slider for selecting teleport distance (0 to 25 studs)
+local Slider = Tab:CreateSlider({
+   Name = "Studs",
+   Range = {0, 25},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "Slider1",
+   Callback = function(Value)
+       teleportDistance = Value
+   end,
+})

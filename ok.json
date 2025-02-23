@@ -1,5 +1,4 @@
-{
-    "hwids": [
-        "57E42DCF-D8B1-4C5B-9D68-F406C8E0B6B2"
-    ]
+return {
+"test123",
+"test-123456"
 }

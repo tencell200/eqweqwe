@@ -3,7 +3,7 @@ local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local Players = game:GetService("Players")
 
 local HWID = RbxAnalyticsService:GetClientId()
-local whitelistURL = "https://raw.githubusercontent.com/tencell200/eqweqwe/main/ok.txt"  -- ✅ Updated to GitHub
+local whitelistURL = "https://raw.githubusercontent.com/tencell200/eqweqwe/main/ok.txt?timestamp=" .. tostring(os.time())
 
 local success, response = pcall(function()
     return HttpService:GetAsync(whitelistURL)
